@@ -105,6 +105,7 @@ fzf-history-widget() {
       if [[ "$results" =~ '^[0-9]+$' ]]; then
         zle vi-fetch-history -n $results
         zle reset-prompt
+        zle accept-line
         return 0
       else
         # do nothing
