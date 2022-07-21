@@ -95,11 +95,11 @@ bindkey -M viins '\ec' fzf-cd-widget
 
 # CTRL-R - Paste the selected command from history into the command line
 fzf-history-widget() {
-  local selected num fc_history
+  local selected num fc_history query
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
   fc_history=$(fc -rl 1 | awk '{ cmd=$0; sub(/^\s*[0-9]+\**\s+/, "", cmd); if (!seen[cmd]++) print $0 }')
   if [ -n "$LBUFFER" ]; then
-    local results=$(grep -oP "\d+(?=.*#$LBUFFER$)" <<< "$fc_history")
+    local results=$(grep -oP "\d+(?=.*#$LBUFFER)" <<< "$fc_history")
     # check if the number of lines in results is equal to one
     if [ -n "$results" ]; then
       if [[ "$results" =~ '^[0-9]+$' ]]; then
@@ -107,17 +107,17 @@ fzf-history-widget() {
         zle reset-prompt
         zle accept-line
         return 0
-      else
-        # do nothing
-        LBUFFER=" : Invalid results found for '#$LBUFFER'"
-        zle reset-prompt
-        zle accept-line
-        return 1
       fi
     fi
   fi
 
-  selected=( $(FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-z:ignore $FZF_CTRL_R_OPTS --query=${(qqq)LBUFFER} +m" $(__fzfcmd) <<< "$fc_history") )
+  if [ -n "$LBUFFER" ]; then
+    query="#$LBUFFER"
+  else
+    query=""
+  fi
+
+  selected=( $(FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-z:ignore $FZF_CTRL_R_OPTS --query=${query} +m" $(__fzfcmd) <<< "$fc_history") )
   local ret=$?
   if [ -n "$selected" ]; then
     num=$selected[1]
