@@ -99,7 +99,9 @@ fzf-history-widget() {
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
   fc_history=$(fc -rl 1 | awk '{ cmd=$0; sub(/^\s*[0-9]+\**\s+/, "", cmd); if (!seen[cmd]++) print $0 }')
   if [ -n "$LBUFFER" ]; then
-    local results=$(grep -oP "\d+(?=.*#$LBUFFER)" <<< "$fc_history")
+    # find lines that match the query, trimp whitespace, then extract the ids
+    local results=$(grep -P "(^|\s)#$LBUFFER($|\s)" <<< "$fc_history" | awk '{$1=$1};1' | grep -oP "^\d+")
+
     # check if the number of lines in results is equal to one
     if [ -n "$results" ]; then
       if [[ "$results" =~ '^[0-9]+$' ]]; then
@@ -117,7 +119,7 @@ fzf-history-widget() {
     query=""
   fi
 
-  selected=( $(FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-z:ignore $FZF_CTRL_R_OPTS --query=${query} +m" $(__fzfcmd) <<< "$fc_history") )
+  selected=( $(FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} $FZF_DEFAULT_OPTS -n2..,.. --tiebreak=index --bind=ctrl-r:toggle-sort,ctrl-z:ignore $FZF_CTRL_R_OPTS --query=${(qqq)query} +m" $(__fzfcmd) <<< "$fc_history") )
   local ret=$?
   if [ -n "$selected" ]; then
     num=$selected[1]
