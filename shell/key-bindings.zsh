@@ -98,11 +98,11 @@ fzf-history-widget() {
   local selected num fc_history query tag rest
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
   fc_history=$(fc -rl 1 | awk '{ cmd=$0; sub(/^\s*[0-9]+\**\s+/, "", cmd); if (!seen[cmd]++) print $0 }')
-  if [ -n "$LBUFFER" ]; then
+  if [ -n "$BUFFER" ]; then
     # get first word
-    tag=$(perl -lane 'print "@F[0]"' <<<"$LBUFFER")
+    tag=$(perl -lane 'print "@F[0]"' <<<"$BUFFER")
     # everything else
-    rest=$(perl -lane 'print "@F[1..$#F]"' <<<"$LBUFFER")
+    rest=$(perl -lane 'print "@F[1..$#F]"' <<<"$BUFFER")
     # find lines that match the query, trim whitespace, then extract the ids
     local results=$(grep -P "(^|\s)#$tag($|\s)" <<< "$fc_history" | awk '{$1=$1};1' | grep -oP "^\d+")
 
@@ -111,9 +111,9 @@ fzf-history-widget() {
       if [[ "$results" =~ '^[0-9]+$' ]]; then
         zle vi-fetch-history -n $results
         # strip everything after first tag, then strip whitespace
-        LBUFFER=$(perl -ne "s/(^|\s)#\w+($|\s).*//g; print;" <<<"$LBUFFER" | awk '{$1=$1};1')
+        BUFFER=$(perl -ne "s/(^|\s)#\w+($|\s).*//g; print;" <<<"$BUFFER" | awk '{$1=$1};1')
         # add arguments
-        LBUFFER+=" $rest"
+        BUFFER+=" $rest"
         zle reset-prompt
         zle accept-line
         return 0
